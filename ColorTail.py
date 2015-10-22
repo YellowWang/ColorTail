@@ -9,6 +9,8 @@ import re
 import codecs
 
 plugin_name = "Color Tail"
+setting_name = "ColorTail.sublime-settings"
+
 
 pattern_char = re.compile(r'\S')
 
@@ -34,10 +36,14 @@ def GetColor(i):
 
 class ColorTailCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
+		setting = sublime.load_settings(setting_name)
+		enable = setting.get("enabled")
+		setting.set("enabled", not enable)
 		return
 
 class ColorThread(threading.Thread):
 	def __init__(self, region, color_view):
+		print("ColorThread init")
 		threading.Thread.__init__(self)
 		self.region = region
 		self.text = color_view.view.substr(self.region)
@@ -107,8 +113,11 @@ class ColorTailView:
 #			print("letter:"+view.substr(letter))
 			match = pattern_char.match(view.substr(letter))
 			if match:
-				t = ColorThread(letter, self)
-				t.start()
+				setting = sublime.load_settings(setting_name)
+				enable = setting.get("enabled")
+				if enable:
+					t = ColorThread(letter, self)
+					t.start()
 
 		self.whole_size = new_size
 		return
@@ -139,7 +148,7 @@ class ColorTailView:
 		# load now used color_scheme
 		src_cs = self.view.settings().get("color_scheme")
 		base_name = os.path.basename(src_cs)
-		#print("src_cs:"+src_cs)
+		print("src_cs:"+src_cs)
 		#print("name:"+base_name)		
 
 		# create color tail scheme
